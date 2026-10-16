@@ -169,22 +169,26 @@ update_pointer() {
     return 0
   fi
   tmp="$file.tmp.$$"
+  # The block is multi-line; BSD awk rejects newlines in -v values, so it
+  # travels via the environment instead (ENVIRON is POSIX).
   if grep -qF "$START" "$file"; then
-    awk -v block="$block" -v start="$START" -v end="$END" '
-      $0 == start { print block; inside = 1; next }
+    CODEX_BOT_BLOCK="$block" awk -v start="$START" -v end="$END" '
+      $0 == start { print ENVIRON["CODEX_BOT_BLOCK"]; inside = 1; next }
       inside && $0 == end { inside = 0; next }
       !inside { print }
     ' "$file" >"$tmp"
   elif grep -qF "$LEGACY_START" "$file"; then
-    awk -v block="$block" -v start="$LEGACY_START" -v end="$LEGACY_END" '
-      $0 == start { print block; inside = 1; next }
+    CODEX_BOT_BLOCK="$block" awk -v start="$LEGACY_START" -v end="$LEGACY_END" '
+      $0 == start { print ENVIRON["CODEX_BOT_BLOCK"]; inside = 1; next }
       inside && $0 == end { inside = 0; next }
       !inside { print }
     ' "$file" >"$tmp"
   else
     # Append with a single blank line separator (none if the file is empty).
     if [ -s "$file" ]; then
-      awk -v block="$block" '{ print } END { print ""; print block }' "$file" >"$tmp"
+      CODEX_BOT_BLOCK="$block" awk \
+        '{ print } END { print ""; print ENVIRON["CODEX_BOT_BLOCK"] }' \
+        "$file" >"$tmp"
     else
       printf '%s\n' "$block" >"$tmp"
     fi

@@ -54,7 +54,7 @@ checksum_tree() { # <dir>: sorted "path hash" for files + link targets
     if [ -L "$p" ]; then
       printf '%s link:%s\n' "$p" "$(readlink "$p")"
     else
-      printf '%s %s\n' "$p" "$(md5sum <"$p" 2>/dev/null || md5 -q "$p")"
+      printf '%s %s\n' "$p" "$(cksum <"$p")"
     fi
   done)
 }
