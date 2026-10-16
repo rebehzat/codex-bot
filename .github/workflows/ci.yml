@@ -1,0 +1,26 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install shellcheck (macOS)
+        if: runner.os == 'macOS'
+        run: command -v shellcheck >/dev/null || brew install shellcheck
+      - name: Install shellcheck (Ubuntu)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+      - name: Shellcheck
+        run: shellcheck install.sh tests/*.sh
+      - name: Skill frontmatter
+        run: bash tests/validate_skill.sh
+      - name: Installer tests
+        run: bash tests/install_test.sh
+      - name: Installer tests under /bin/bash (macOS bash 3.2)
+        if: runner.os == 'macOS'
+        run: /bin/bash tests/install_test.sh
